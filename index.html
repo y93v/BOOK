@@ -2,383 +2,322 @@
 <html lang="fr" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Notre Constellation de Cœur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pour Toi, Meli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
-        :root {
-            --dark-sky-1: #00000c;
-            --dark-sky-2: #100a1c;
-            --text-light: #f0f0f5;
-            --star-color: #ffffff;
-            --blood-red-glow: #B82C2C;
-            --constellation-color: rgba(255, 255, 255, 0.6);
-        }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+        body {
+            font-family: 'Quicksand', sans-serif;
+            /* New, lightweight static background */
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
             overflow: hidden;
-            background: radial-gradient(ellipse at bottom, var(--dark-sky-2) 0%, var(--dark-sky-1) 100%);
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            /* Fix for blue tap highlight on mobile */
-            -webkit-tap-highlight-color: transparent;
+            color: #e0e0e0;
+            height: 100vh;
         }
 
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
+        /* Lightweight Starfield */
+        @keyframes subtle-flicker {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        #star-field {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+        .stars {
+            width: 1px; height: 1px;
+            background: transparent;
+            box-shadow: 
+                -37vw 18vh #FFF, 8vw 68vh #FFF, -45vw 10vh #FFF, 2vw 74vh #FFF, 2vw 82vh #FFF, 
+                34vw 6vh #FFF, 33vw 87vh #FFF, 49vw 10vh #FFF, 3vw 86vh #FFF, -3vw 77vh #FFF,
+                -21vw 23vh #FFF, -12vw 63vh #FFF, -24vw 80vh #FFF, 4vw 94vh #FFF, 15vw 93vh #FFF,
+                -40vw 88vh #FFF, 23vw 5vh #FFF, 10vw 10vh #FFF, -15vw 55vh #FFF, 45vw 22vh #FFF,
+                -27vw 48vh #FFF, 18vw 34vh #FFF, -35vw 60vh #FFF, 42vw 12vh #FFF, -48vw 30vh #FFF;
+            animation: subtle-flicker 4s infinite alternate;
         }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: var(--text-light);
-            pointer-events: none;
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(12, 10, 24, 0.7);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 40; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.4s ease-in-out; pointer-events: none;
+        }
+        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: rgba(25, 23, 46, 0.9);
+            padding: 2rem 1.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(236, 72, 153, 0.4);
+            width: 90%; max-width: 550px; position: relative;
+            box-shadow: 0 0 50px rgba(236, 72, 153, 0.5), 0 0 20px rgba(236, 72, 153, 0.3);
+            transform: translateY(20px) scale(0.95); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.visible .modal-content { transform: translateY(0) scale(1); }
+        .modal-close-btn {
+            position: absolute; top: 15px; right: 15px;
+            cursor: pointer; transition: all 0.3s ease; z-index: 10;
+            font-size: 1.5rem; color: #ec4899;
+        }
+        .modal-close-btn:hover { transform: scale(1.2) rotate(90deg); color: #fff;}
+        
+        .font-dancing { font-family: 'Dancing Script', cursive; }
+        .text-glow {
+             color: #f9a8d4;
+             text-shadow: 0 0 7px #f9a8d4, 0 0 12px #ec4899, 0 0 25px #ec4899;
         }
 
-        #intro-message {
-            opacity: 1;
-            transition: opacity 1.5s ease-out 1s;
-            max-width: 500px;
-            padding: 20px;
+        /* Main Screen Elements */
+        .main-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(3rem, 10vw, 6rem);
         }
-
-        #intro-message h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3rem;
-            font-weight: 700;
-            margin: 0;
-            color: white;
-            text-shadow: 0 0 15px var(--blood-red-glow);
+        .subtitle {
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            color: #c4b5fd; /* Lavender color */
         }
-
-        #intro-message p {
-            font-size: 1.2rem;
-            margin-top: 15px;
-            opacity: 0.8;
-            font-style: italic;
+        .main-heart {
+            font-size: clamp(2rem, 8vw, 4rem);
+            color: #ec4899;
+            text-shadow: 0 0 10px #ec4899, 0 0 20px #ec4899, 0 0 40px #ec4899, 0 0 80px #ec4899;
+            animation: heart-pulse 2s infinite ease-in-out;
         }
         
-        .memory-panel {
-            position: absolute;
-            z-index: 10;
-            background: rgba(10, 10, 20, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            color: var(--text-light);
-            padding: 25px;
-            border-radius: 15px;
-            max-width: 300px;
-            width: 90%;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            pointer-events: all;
+        @keyframes heart-pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px #ec4899); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 30px #ec4899); }
         }
 
-        .memory-panel.active {
-            opacity: 1;
-            transform: translateY(0);
+        .action-button {
+            padding: 1rem 2rem;
+            border: 2px solid #ec4899;
+            border-radius: 12px;
+            background: transparent;
+            color: #ec4899;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(236, 72, 153, 0.3);
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 500;
+        }
+        .action-button:hover {
+            background: #ec4899;
+            color: #fff;
+            box-shadow: 0 0 25px #ec4899, 0 0 50px #ec4899;
+            transform: scale(1.05);
         }
 
-        @keyframes fadeInText {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Message List inside Modal */
+        .message-title-btn {
+            display: block; width: 100%; text-align: left;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            color: #f9a8d4;
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            background-color: rgba(236, 72, 153, 0.1);
+            font-size: 1.1rem;
+        }
+        .message-title-btn:hover {
+            background-color: rgba(236, 72, 153, 0.25);
+            color: #fff;
+            border-color: rgba(236, 72, 153, 0.5);
+            transform: translateX(5px);
         }
 
-        .memory-panel h2 {
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-size: 1.8rem;
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: var(--star-color);
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.6);
-            animation: fadeInText 0.8s ease-out 0.3s backwards;
-        }
-
-        .memory-panel p {
-            font-size: 1rem;
-            line-height: 1.7;
-            opacity: 0;
-            margin-bottom: 0;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-            animation: fadeInText 0.8s ease-out 0.5s backwards;
-            animation-fill-mode: forwards;
-        }
-
-        @media (max-width: 768px) {
-            #intro-message h1 {
-                font-size: 2.5rem;
-            }
-            .memory-panel {
-                max-width: 85%;
-                padding: 20px;
-            }
-             .memory-panel h2 {
-                font-size: 1.5rem;
-            }
-            .memory-panel p {
-                font-size: 0.9rem;
-            }
-        }
+        /* Custom Scrollbar */
+        #modal-body::-webkit-scrollbar { width: 8px; }
+        #modal-body::-webkit-scrollbar-track { background: #19172e; border-radius: 10px; }
+        #modal-body::-webkit-scrollbar-thumb { background-color: #ec4899; border-radius: 10px; border: 2px solid #19172e; }
     </style>
 </head>
 <body>
+    <div id="star-field">
+        <div class="stars"></div>
+    </div>
 
-    <canvas id="starrySky"></canvas>
-    <div id="memory-panel-container"></div>
-
-    <div class="overlay">
-        <div id="intro-message">
-            <h1>Pour Melissa</h1>
-            <p>Dans le silence de nos nuits, j'ai rassemblé nos souvenirs. Touche les étoiles, et laisse-les te raconter notre histoire.</p>
+    <div id="initial-modal" class="modal-overlay">
+        <div class="modal-content">
+            <i id="initial-modal-close" class="fas fa-times modal-close-btn"></i>
+            <div class="text-center">
+                 <h2 class="font-dancing text-glow text-3xl mb-4">Bienvenue, mon étoile ✨</h2>
+                 <p class="text-lg leading-relaxed">
+                    J'ai créé ce petit univers juste pour toi, un endroit où tu pourras toujours trouver un morceau de mon cœur. 💖
+                    <br/><br/>
+                    Ceci n'est qu'un simple écho de l'amour infini que je te porte. Chaque mot est une promesse, un rappel que tu es tout pour moi, aujourd'hui et pour l'éternité. ♾️
+                 </p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="messages-modal" class="modal-overlay">
+        <div class="modal-content">
+             <i id="messages-modal-close" class="fas fa-times modal-close-btn"></i>
+             <div id="modal-body" class="max-h-[70vh] overflow-y-auto pr-3">
+                <!-- Content will be injected here -->
+             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <main class="container mx-auto p-4 sm:p-8 flex flex-col items-center justify-center min-h-screen relative z-10 text-center">
+        <div class="flex flex-col items-center justify-center gap-2 mb-12">
+            <h1 class="main-title text-glow">Notre Ciel Étoilé</h1>
+            <p class="subtitle text-glow">Pour Toi, Meli 💖</p>
+            <i class="fas fa-heart main-heart mt-4"></i>
+        </div>
+        
+        <button id="open-messages-btn" class="action-button">
+            Ouvrir les messages 💌
+        </button>
+    </main>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('starrySky');
-            const ctx = canvas.getContext('2d');
-            let width = canvas.width = window.innerWidth;
-            let height = canvas.height = window.innerHeight;
-
-            const introMessage = document.getElementById('intro-message');
-            const memoryPanelContainer = document.getElementById('memory-panel-container');
-            
-            let stars = [], memoryStars = [], particles = [], nebulaParticles = [], shootingStars = [];
-            let constellationLines = [];
-            let musicStarted = false;
-            let currentStep = 1;
-            let finalStar = null;
-            let nebulaRotation = 0;
-
-            const memories = {
-                1: { title: "Ton Silence, Ma Berceuse", text: "Ce n'était plus un jeu. C'était le monde réel, et il s'est effacé. Il ne restait que le son de ta respiration, un écho au mien. Cette nuit-là, je n'ai pas dormi, j'ai trouvé la paix. Une paix qui me manque cruellement aujourd'hui." },
-                2: { title: "Ton Rire, Mon Seul Écho", text: "Les jeux, Karine... tout n'était qu'un décor. La seule chose réelle, la seule chose que mon cœur cherchait, c'était l'écho de ton rire. C'était la preuve que, pour un instant, tout allait bien dans mon monde. Parce que tu y étais." },
-                3: { title: "Ces Notes qui Te Cherchaient", text: "Mes doigts étaient maladroits, mon cœur battait la chamade. Chaque note apprise dans le secret n'était pas pour la musique, c'était une prière pour voir ton visage s'illuminer. Ton sourire, ce jour-là, a validé chaque seconde de doute. C'était mon chef-d'œuvre." },
-                4: { title: "Mon Imagination Vaincue", text: "J'ai essayé, tu sais. J'ai tenté de te peindre avec les couleurs de tes mots. Mais quelle folie... Mon imagination la plus folle n'était qu'une pâle esquisse face à la lumière que tu es. Tu n'as pas dépassé mes rêves, tu les as rendus insignifiants." },
-                5: { title: "Le Combat pour Mon Monde", text: "Chaque refus était une blessure, mais abandonner aurait été mourir. Je ne me battais pas pour gagner un jeu, je me battais pour le droit de respirer le même air que toi. Ton 'oui' n'a pas été le début de tout, il a été le moment où mon monde a enfin trouvé son sens." },
-                6: { title: "Un Refuge dans le Chaos", text: "Le monde extérieur n'existait plus. Il n'y avait que nos rires stupides, si purs, si vrais. Dans ce chaos enfantin, j'ai trouvé un refuge, un endroit où la distance et la douleur ne pouvaient nous atteindre. J'essaie de me souvenir de ce sentiment chaque jour." },
-                final: { title: "Juste pour ce Soir", text: "Le silence entre nous est devenu si lourd. Chaque jour qui passe creuse un peu plus le vide, et mon cœur est en morceaux. Pardonne-moi si ce geste est égoïste, mais ce soir, j'avais juste besoin de me souvenir de toi. J'avais besoin de nous. C'est ma façon de te dire que malgré la douleur, je refuse de nous laisser devenir un simple souvenir." }
-            };
-
-            // --- Audio Setup ---
-            let piano, explosionSound, chimeSound;
-            function setupAudio() {
-                const reverb = new Tone.Reverb({ decay: 15, wet: 0.6 }).toDestination();
-                piano = new Tone.PolySynth(Tone.Synth, {
-                    oscillator: { type: 'sine' },
-                    envelope: { attack: 0.01, decay: 1, sustain: 0.2, release: 3 },
-                    volume: -10
-                }).connect(reverb);
-
-                explosionSound = new Tone.NoiseSynth({
-                    noise: { type: 'white' },
-                    envelope: { attack: 0.001, decay: 0.5, sustain: 0 },
-                    volume: -5
-                }).toDestination();
-
-                chimeSound = new Tone.FMSynth({
-                    harmonicity: 5,
-                    modulationIndex: 10,
-                    envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.5 },
-                    volume: -8
-                }).connect(reverb);
-
-                const softNotes = [ "C4", "E4", "G4", "B4", "A4", "F4" ];
-                new Tone.Sequence((time, note) => {
-                    piano.triggerAttackRelease(note, "1n", time);
-                }, softNotes, "2m").start(0);
+        const messages = {
+            sad: {
+                title: "Quand tu te sens triste 😔",
+                text: "Meli, je vois dans tes yeux que tu traverses des moments de tristesse, et ça me déchire le cœur. 💔 Je voudrais être là pour sécher tes larmes, t’offrir tout le réconfort du monde, mais je veux que tu saches que tu n’as pas à traverser ça seule. Je suis là, toujours, prêt à t’écouter, à te comprendre, et surtout à te montrer combien je tiens à toi. Ta tristesse me touche, mais elle ne te définit pas. Tu es forte et tu brilleras à nouveau, je le sais. 🙏 Et en attendant, je serai là pour te porter, pour te rappeler que tu es aimée. ❤️"
+            },
+            upset: {
+                title: "Quand tu es contrariée 😟",
+                text: "Meli, quand tu es en colère ou contrariée, je ressens tout ce poids sur toi, et ça me fait mal de te voir ainsi. Mais sache que je suis là pour t’écouter, pour comprendre ce que tu ressens. Ta colère est légitime, et tu as le droit d’être en colère. Mais je veux aussi te dire que je suis prêt à tout pour réparer les choses. Si j’ai fait quelque chose pour te déranger, je suis sincèrement désolé. 🙏 Rien n’est plus important pour moi que ton bonheur et ta sérénité. Ensemble, on peut surmonter n’importe quel obstacle. Tu n’es pas seule dans ce sentiment, je suis là, toujours. ❤️"
+            },
+            happy: {
+                title: "Quand tu es heureuse 😊",
+                text: "Meli, ta joie est ma lumière, chaque sourire que tu m’offres est comme un rayon de soleil qui illumine ma vie. ✨ Quand je te vois heureuse, mon cœur se remplit de bonheur. J’ai l’impression que tout est possible quand tu es dans cette énergie, cette beauté rayonnante. Tu rends mon monde tellement meilleur, et je te promets que je ferai tout pour te voir sourire chaque jour. Ta joie est la plus belle chose au monde, et tu mérites chaque instant de bonheur. 💖"
+            },
+            content: {
+                title: "Quand tu te sens sereine 😌",
+                text: "Meli, quand tu es paisible et sereine, c’est là que je trouve la vraie beauté de notre vie. Ton calme m’apaise, ton regard tranquille me donne l’impression que tout va bien. Dans ces moments-là, je me sens complet. 🥰 Tu es mon havre de paix, mon refuge après chaque tempête. Voir ton cœur en paix, c’est tout ce que je veux. Je serai là pour préserver cette tranquillité, pour te soutenir à chaque étape de ton chemin. 💖"
+            },
+            confused: {
+                title: "Quand tu te sens perdue 🤔",
+                text: "Meli, je sais que parfois, la confusion envahit ton esprit et que tu ne sais pas quelle direction prendre. Mais tu n’as pas à tout comprendre d’un coup. Je serai là pour te guider, pour t’accompagner dans ces moments de doute. Je crois en toi, je crois en ta capacité à trouver des réponses. Même si tu ne vois pas encore la lumière au bout du tunnel, sache que je suis là pour t’aider à éclairer ton chemin. 🤝 Ensemble, on trouvera toujours la voie. ❤️"
+            },
+            grateful: {
+                title: "Quand tu es reconnaissante 🥰",
+                text: "Meli, je me sens tellement honoré de recevoir ton amour, ta gratitude. Chaque mot que tu prononces, chaque geste que tu fais, me rappelle combien je suis chanceux de t’avoir dans ma vie. 🙏 Ton amour est ce qui me donne la force de me lever chaque jour. Je suis reconnaissant de chaque moment passé à tes côtés, de chaque sourire que tu m’offres. Tu es la personne que j’ai toujours cherchée, celle qui complète mon âme. 💖"
+            },
+            overwhelmed: {
+                title: "Quand tu es dépassée 😥",
+                text: "Meli, je vois que tout est trop pour toi en ce moment. Tu es fatiguée, épuisée par les responsabilités et les attentes. Mais je veux te dire une chose : tu n’as pas à tout porter seule. Je serai toujours là pour alléger ta charge, pour te soutenir quand tu as l’impression que tout s’effondre. Laisse-moi prendre soin de toi. 🤗 Si tu as besoin de respirer, je suis là pour te donner cet espace. Je suis là pour toi, à chaque étape, prêt à tout pour te rendre la vie plus facile. ❤️"
+            },
+            inlove: {
+                title: "Quand tu es heureuse avec moi 🥰",
+                text: "Meli, chaque jour passé avec toi est une bénédiction, mais quand tu es heureuse dans notre relation, mon cœur se gonfle de fierté. De savoir que tu es épanouie, que notre amour te comble, c’est tout ce dont je rêvais. ✨ Tu es celle avec qui je veux tout partager, avec qui je veux bâtir un futur plein de rires, de tendresse et de complicité. Chaque moment passé avec toi est une promesse de bonheur, et je ferai tout pour que tu sois heureuse à mes côtés. 💖"
+            },
+            loved: {
+                title: "Quand tu te sens aimée ❤️",
+                text: "Meli, quand tu ressens mon amour, sache que tu ressens l’essence même de mon cœur. Chaque geste, chaque mot que je t’adresse, vient du plus profond de mon âme. Je te porte en moi, chaque instant, chaque seconde, et je ne cesserai jamais de t’aimer. ✨ Tu es la personne avec qui je veux tout vivre, avec qui je veux bâtir une vie pleine de bonheur et d’amour. Je t’aime plus que tu ne peux l’imaginer, et je continuerai à te montrer chaque jour combien tu comptes pour moi. 💖"
+            },
+            angry: {
+                title: "Quand tu es en colère contre moi 😔",
+                text: "Meli, je sais que parfois je fais des erreurs, et si quelque chose que j’ai fait ou dit t’a mise en colère, je suis profondément désolé. 🙏 Mon intention n’a jamais été de te blesser, mais je comprends que parfois je peux te faire ressentir ça. Ce que je veux, c’est que tu sois heureuse, et je ferai tout pour réparer ce qui a été brisé. Je t’aime profondément et je suis prêt à tout pour regagner ta confiance, pour faire en sorte que tu te sentes écoutée et respectée. Je suis là, toujours, prêt à me battre pour toi et pour notre amour. ❤️"
             }
+        };
 
-            // --- Star, Particle & Nebula Classes ---
-            class Star {
-                constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.radius = Math.random() * 1.2; this.opacity = Math.random() * 0.5 + 0.2; }
-                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.fill(); }
+        const initialModal = document.getElementById('initial-modal');
+        const initialModalClose = document.getElementById('initial-modal-close');
+        const messagesModal = document.getElementById('messages-modal');
+        const messagesModalClose = document.getElementById('messages-modal-close');
+        const openMessagesBtn = document.getElementById('open-messages-btn');
+        const modalBody = document.getElementById('modal-body');
+        
+        let isAudioStarted = false;
+
+        // --- Audio Setup with Tone.js ---
+        const clickSynth = new Tone.Synth({
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.4 }
+        }).toDestination();
+        clickSynth.volume.value = -12;
+
+        const hoverSynth = new Tone.MembraneSynth({
+            pitchDecay: 0.01,
+            octaves: 2,
+            envelope: { attack: 0.001, decay: 0.1, sustain: 0 }
+        }).toDestination();
+        hoverSynth.volume.value = -18;
+
+        const startAudioContext = async () => {
+            if (isAudioStarted) return;
+            try {
+                await Tone.start();
+                isAudioStarted = true;
+            } catch (e) {
+                console.error("Impossible de démarrer le contexte audio", e);
             }
+        };
 
-            class MemoryStar extends Star {
-                constructor(id, x, y) { super(); this.id = id; this.x = x; this.y = y; this.radius = window.innerWidth > 768 ? 10 : 8; this.baseRadius = this.radius; this.pulseSpeed = 0.03; this.pulse = Math.random() * Math.PI; this.isClicked = false; }
-                draw() { ctx.save(); const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 3); g.addColorStop(0, `rgba(255, 255, 255, 0.5)`); g.addColorStop(1, `rgba(255, 255, 255, 0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 3, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'white'; ctx.shadowColor = 'white'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = 'black'; ctx.font = `${this.radius}px 'Poppins', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(this.id, this.x, this.y); ctx.restore(); }
-                update() { this.pulse += this.pulseSpeed; if (this.id === currentStep) { this.radius = this.baseRadius + Math.sin(this.pulse) * 2.5; } else { this.radius = this.baseRadius; } }
+        const playSound = (synth, note, duration) => {
+            if (isAudioStarted) {
+                synth.triggerAttackRelease(note, duration);
             }
-            
-            class FinalStar extends MemoryStar {
-                constructor(id, x, y) { super(id, x, y); this.radius = 0; this.baseRadius = window.innerWidth > 768 ? 15 : 12; this.isGrowing = true; }
-                draw() { ctx.save(); const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius); g.addColorStop(0, `rgba(255, 255, 255, 1)`); g.addColorStop(0.5, `rgba(255, 255, 255, 0.8)`); g.addColorStop(1, `rgba(184, 44, 44, 0)`); ctx.fillStyle = g; ctx.shadowBlur = 35; ctx.shadowColor = '#B82C2C'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-                update() { if (this.isGrowing && this.radius < this.baseRadius) { this.radius += 0.15; } else { this.isGrowing = false; this.pulse += this.pulseSpeed * 2; this.radius = this.baseRadius + Math.sin(this.pulse) * 3; } }
-            }
+        };
 
-            class Particle {
-                constructor(x, y) { this.x = x; this.y = y; const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 12 + 4; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; this.radius = Math.random() * 5 + 1; this.lifespan = 180; this.opacity = 1; this.color = `hsl(${Math.random() * 60 + 180}, 100%, 80%)`; }
-                update() { this.x += this.vx; this.y += this.vy; this.vx *= 0.95; this.vy *= 0.95; this.lifespan--; this.opacity = this.lifespan / 180; }
-                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('hsl', 'hsla'); ctx.shadowColor = this.color; ctx.shadowBlur = 15; ctx.fill(); ctx.shadowBlur = 0; }
-            }
-            
-            class NebulaParticle {
-                constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.radius = Math.random() * 200 + 150; this.opacity = Math.random() * 0.08 + 0.03; this.speedX = (Math.random() - 0.5) * 0.05; this.speedY = (Math.random() - 0.5) * 0.05; this.color = `hsla(${Math.random() * 60 + 200}, 100%, 50%, ${this.opacity})`; }
-                update(rotation) { this.x += this.speedX + Math.sin(rotation) * 0.1; this.y += this.speedY + Math.cos(rotation) * 0.1; if (this.x < -this.radius || this.x > width + this.radius || this.y < -this.radius || this.y > height + this.radius) { Object.assign(this, new NebulaParticle()); } }
-                draw() { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius); g.addColorStop(0, this.color); g.addColorStop(1, `hsla(0, 0%, 0%, 0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-            }
+        const showInitialModal = () => initialModal.classList.add('visible');
+        const hideInitialModal = () => {
+            playSound(clickSynth, "A4", "8n");
+            initialModal.classList.remove('visible');
+            startAudioContext(); 
+        };
+        initialModalClose.addEventListener('click', hideInitialModal);
+        
+        const showMessagesModal = () => messagesModal.classList.add('visible');
+        const hideMessagesModal = () => {
+            playSound(clickSynth, "A4", "8n");
+            messagesModal.classList.remove('visible');
+        };
+        messagesModalClose.addEventListener('click', hideMessagesModal);
 
-            class ShootingStar {
-                constructor() { this.reset(); }
-                reset() { this.x = Math.random() * width; this.y = 0; this.len = Math.random() * 80 + 10; this.speed = Math.random() * 10 + 6; this.size = Math.random() * 1 + 0.1; this.waitTime = new Date().getTime() + Math.random() * 3000 + 500; this.active = false; }
-                update() { if (this.active) { this.x -= this.speed; this.y += this.speed; if (this.x < 0 || this.y > height) { this.reset(); } } else { if (this.waitTime < new Date().getTime()) { this.active = true; } } }
-                draw() { if (this.active) { ctx.lineCap = 'round'; ctx.lineWidth = this.size; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x - this.len, this.y + this.len); ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.stroke(); } }
-            }
+        const showMessagesList = () => {
+            playSound(clickSynth, "C5", "8n");
+            modalBody.innerHTML = '';
+            const listTitle = document.createElement('h2');
+            listTitle.className = 'font-dancing text-glow text-3xl mb-4 text-center';
+            listTitle.textContent = 'Pour chaque moment... 💌';
+            modalBody.appendChild(listTitle);
 
-            class AnimatedLine {
-                constructor(from, to) { this.from = from; this.to = to; this.progress = 0; }
-                update() { if (this.progress < 1) { this.progress += 0.015; } return this.progress >= 1; }
-                draw() { const currentX = this.from.x + (this.to.x - this.from.x) * this.progress; const currentY = this.from.y + (this.to.y - this.from.y) * this.progress; ctx.beginPath(); ctx.moveTo(this.from.x, this.from.y); ctx.lineTo(currentX, currentY); ctx.stroke(); }
-            }
-
-            function createExplosion(x, y) { for (let i = 0; i < 300; i++) { particles.push(new Particle(x, y)); } explosionSound.triggerAttack(); }
-
-            function init() {
-                for (let i = 0; i < 150; i++) { stars.push(new Star()); }
-                for (let i = 0; i < 20; i++) { nebulaParticles.push(new NebulaParticle()); }
-                for (let i = 0; i < 3; i++) { shootingStars.push(new ShootingStar()); }
-                const heartPoints = [ { x: 0.5, y: 0.3 }, { x: 0.7, y: 0.2 }, { x: 0.85, y: 0.5 }, { x: 0.5, y: 0.85 }, { x: 0.15, y: 0.5 }, { x: 0.3, y: 0.2 } ];
-                heartPoints.forEach((pos, i) => { memoryStars.push(new MemoryStar(i + 1, width * pos.x, height * pos.y)); });
-            }
-
-            function animate() {
-                nebulaRotation += 0.0005;
-                ctx.clearRect(0, 0, width, height);
-                nebulaParticles.forEach(p => { p.update(nebulaRotation); p.draw(); });
-                stars.forEach(s => s.draw());
-                shootingStars.forEach(s => { s.update(); s.draw(); });
-                drawConstellation();
-                memoryStars.forEach(s => { if(!s.isClicked) s.update(); s.draw(); });
-                if(finalStar) { finalStar.update(); finalStar.draw(); }
-                particles.forEach((p, index) => { if (p.lifespan <= 0) particles.splice(index, 1); else { p.update(); p.draw(); } });
-                requestAnimationFrame(animate);
-            }
-
-            function drawConstellation() {
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.lineWidth = 2; ctx.shadowColor = 'white'; ctx.shadowBlur = 10;
-                constellationLines.forEach(line => {
-                    const isDone = line.update();
-                    line.draw();
-                });
-                ctx.shadowBlur = 0;
-            }
-
-            function showMemoryPanel(star) {
-                memoryPanelContainer.innerHTML = ''; // Clear previous panels
-                const memory = memories[star.id] || memories['final'];
-                const panel = document.createElement('div');
-                panel.className = 'memory-panel';
-                panel.innerHTML = `<h2>${memory.title}</h2><p>${memory.text}</p>`;
-                
-                if (window.innerWidth <= 768) {
-                    panel.style.left = '50%'; panel.style.top = '50%';
-                    panel.style.transform = 'translate(-50%, -50%)';
-                } else {
-                    let panelX = star.x + 40; let panelY = star.y - 60;
-                    if (panelX + 300 > width) panelX = star.x - 340;
-                    if (panelY < 20) panelY = star.y + 40;
-                    if (panelY + 200 > height) panelY = star.y - 220;
-                    panel.style.left = `${panelX}px`; panel.style.top = `${panelY}px`;
-                }
-                
-                memoryPanelContainer.appendChild(panel);
-                setTimeout(() => panel.classList.add('active'), 50);
-            }
-            
-            function hideMemoryPanels() { memoryPanelContainer.innerHTML = ''; }
-
-            function handleClick(e) {
-                if (!musicStarted) {
-                    Tone.start().then(setupAudio).then(() => {
-                        Tone.Transport.start();
-                        musicStarted = true;
-                        introMessage.style.opacity = '0';
-                    });
-                }
-                
-                if (memoryPanelContainer.innerHTML !== '') { hideMemoryPanels(); return; }
-
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-
-                if (finalStar) {
-                    const distance = Math.sqrt(Math.pow(x - finalStar.x, 2) + Math.pow(y - finalStar.y, 2));
-                    if (distance < finalStar.radius + 10) {
-                        createExplosion(finalStar.x, finalStar.y);
-                        showMemoryPanel(finalStar);
-                        finalStar = null;
-                        return;
-                    }
-                }
-
-                const starToClick = memoryStars.find(s => s.id === currentStep);
-                if (!starToClick) return;
-
-                const distance = Math.sqrt(Math.pow(x - starToClick.x, 2) + Math.pow(y - starToClick.y, 2));
-                if (distance < starToClick.radius + 10) {
-                    starToClick.isClicked = true;
-                    chimeSound.triggerAttackRelease("C5", "8n");
-                    
-                    if (currentStep > 1) {
-                        const prevStar = memoryStars.find(s => s.id === currentStep - 1);
-                        constellationLines.push(new AnimatedLine(prevStar, starToClick));
-                    }
-                    
-                    showMemoryPanel(starToClick);
-                    
-                    if (currentStep === 6) {
-                         const lastStar = memoryStars.find(s => s.id === 6);
-                         const firstStar = memoryStars.find(s => s.id === 1);
-                         constellationLines.push(new AnimatedLine(lastStar, firstStar));
-                        
-                         setTimeout(() => {
-                            if (currentStep === 7) { // Double check to prevent race conditions
-                                finalStar = new FinalStar('final', width / 2, height / 2);
-                                piano.triggerAttackRelease("G5", "2n");
-                            }
-                         }, 3000); // Wait for line animation to finish
-                    }
-                    currentStep++;
-                }
-            }
-
-            window.addEventListener('resize', () => {
-                width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
-                stars = []; memoryStars = []; constellationLines = []; particles = []; nebulaParticles = [];
-                currentStep = 1; finalStar = null;
-                init();
+            Object.keys(messages).forEach(mood => {
+                const button = document.createElement('button');
+                button.className = 'message-title-btn';
+                button.textContent = messages[mood].title;
+                button.onmouseover = () => playSound(hoverSynth, "C2", "32n");
+                button.onclick = () => showMessageText(mood);
+                modalBody.appendChild(button);
             });
-            
-            canvas.addEventListener('click', handleClick);
-            init();
-            animate();
+            showMessagesModal();
+        };
+
+        const showMessageText = (mood) => {
+            playSound(clickSynth, "E5", "8n");
+            const message = messages[mood];
+            modalBody.innerHTML = `
+                <button id="back-to-list-btn" class="message-title-btn mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i> Retour à la liste
+                </button>
+                <h2 class="font-dancing text-glow text-3xl mb-4 text-center">${message.title}</h2>
+                <p class="text-lg leading-relaxed">${message.text}</p>
+            `;
+            const backBtn = document.getElementById('back-to-list-btn');
+            backBtn.onmouseover = () => playSound(hoverSynth, "C2", "32n");
+            backBtn.onclick = showMessagesList;
+        };
+
+        openMessagesBtn.addEventListener('click', showMessagesList);
+        
+        window.addEventListener('load', () => {
+            setTimeout(showInitialModal, 500);
         });
     </script>
-
 </body>
 </html>
+
