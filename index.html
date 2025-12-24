@@ -1,492 +1,550 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aku Cinta Kamu ❤️</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: radial-gradient(circle, #2c001e, #1a0012, #050505);
-      height: 100%;
-      font-family: 'Courier New', monospace;
-      cursor: pointer;
-      /* Prevents blue highlight on tap on mobile */
-      -webkit-tap-highlight-color: transparent;
-      user-select: none; /* Prevents text selection on mobile */
-    }
-      
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chasing Images | Interactive Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Premium Fonts: Cinzel for elegance, Crimson Pro for readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
+    <style>
+        :root {
+            --bg-base: #fdfcf8;
+            --text-primary: #1c1c1c;
+            --text-secondary: #5a5a5a;
+            --accent: #9a2b2b; /* Deep Burgundy */
+            --selection: #e3dcd2;
+            --line-color: #e5e5e5;
+        }
 
-    .center-message {
-      color: #ff85c1;
-      font-size: clamp(3rem, 12vw, 7rem); /* Adjusted for better scaling */
-      text-align: center;
-      opacity: 0;
-      text-shadow: 
-        0 0 5px #ff69b4,
-        0 0 10px #ff69b4,
-        0 0 20px #ff1493,
-        0 0 40px #ff1493,
-        0 0 60px #ff1493;
-      animation: fadeIn 2s ease-in-out 1s forwards, float 8s ease-in-out 3s infinite;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
+        [data-theme="dark"] {
+            --bg-base: #111111;
+            --text-primary: #e6e6e6;
+            --text-secondary: #888888;
+            --accent: #ff5c5c;
+            --selection: #333333;
+            --line-color: #2a2a2a;
+        }
 
-    @keyframes float {
-      0%   { transform: scale(1) translateY(0px); }
-      50%  { transform: scale(1.05) translateY(-20px); }
-      100% { transform: scale(1) translateY(0px); }
-    }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Crimson Pro', serif;
+            transition: background-color 0.8s cubic-bezier(0.22, 1, 0.36, 1), color 0.8s;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-    @keyframes border-glow {
-      0%   { border-color: #ff1493; box-shadow: 0 0 50px rgba(255, 20, 147, 0.6); }
-      50%  { border-color: #ff85c1; box-shadow: 0 0 70px rgba(255, 133, 193, 0.8); }
-      100% { border-color: #ff1493; box-shadow: 0 0 50px rgba(255, 20, 147, 0.6); }
-    }
-    
-    .action-button-container {
-      position: absolute;
-      bottom: 30px;
-      z-index: 20;
-    }
-    #start-game-container {
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    #message-button-container {
-      right: 30px;
-    }
-    
-    .game-button {
-      background: rgba(255, 105, 180, 0.1);
-      border: 2px solid #ff69b4;
-      color: #ffc0cb;
-      padding: 15px 30px;
-      font-family: 'Courier New', monospace;
-      font-size: 18px;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(5px);
-      box-shadow: 0 0 15px rgba(255, 105, 180, 0.2), inset 0 0 10px rgba(255, 105, 180, 0.2);
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    }
-    .game-button:hover {
-      background: rgba(255, 105, 180, 0.3);
-      box-shadow: 0 0 30px rgba(255, 105, 180, 0.7), inset 0 0 15px rgba(255, 105, 180, 0.4);
-      color: white;
-      transform: translateY(-3px) scale(1.05);
-    }
-    #showMessageBtn {
-        width: 60px;
-        height: 60px;
-        padding: 0;
-        font-size: 24px;
-        font-weight: bold;
-    }
-    
-    .modal {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 100; display: none; align-items: center;
-      justify-content: center; padding: 15px; opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-    .modal.show { display: flex; opacity: 1; }
+        /* 1. PAPER TEXTURE OVERLAY */
+        .texture-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+        }
+        [data-theme="dark"] .texture-overlay {
+            opacity: 0.07;
+            mix-blend-mode: overlay;
+        }
 
-    .modal-content {
-      background: rgba(26, 2, 13, 0.6);
-      backdrop-filter: blur(10px);
-      border: 2px solid #ff1493;
-      border-radius: 30px; 
-      padding: 30px 40px; width: 100%; max-width: 500px;
-      text-align: center; color: #ffc0cb;
-      position: relative; transform: scale(0.9);
-      transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-      animation: border-glow 4s ease-in-out infinite;
-      box-sizing: border-box;
-    }
-    .modal.show .modal-content { transform: scale(1); }
-    
-    #game-question {
-      font-size: clamp(20px, 4vw, 24px);
-      text-shadow: 0 0 10px #ff1493;
-      margin-bottom: 40px; min-height: 50px; line-height: 1.4;
-    }
-    #special-message {
-        font-size: clamp(16px, 3vw, 18px);
-        text-align: left;
-        line-height: 1.8;
-        text-shadow: 0 0 5px #ff69b4;
-    }
-    
-    .game-buttons {
-      position: relative; display: flex;
-      justify-content: center; gap: 20px;
-      height: 50px; align-items: center;
-    }
-    
-    #yesBtn {
-      position: absolute;
-      transition: top 0.2s ease, left 0.2s ease, transform 0.3s ease;
-    }
-    
-    #win-message {
-      font-size: clamp(22px, 5vw, 28px);
-      font-weight: bold;
-      line-height: 1.6; margin: 20px 0;
-      text-shadow: 0 0 10px #ff69b4;
-    }
-    
-    .modal-close {
-      position: absolute; top: 10px; right: 20px;
-      font-size: 35px; font-weight: bold;
-      color: #ff69b4; cursor: pointer;
-      transition: transform 0.2s, color 0.2s;
-    }
-    .modal-close:hover {
-      transform: scale(1.2) rotate(90deg); color: white;
-    }
+        /* Typography */
+        h1, h2, h3, .font-display { font-family: 'Cormorant Garamond', serif; }
+        .font-ui { font-family: 'Inter', sans-serif; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
 
-    /* --- Mobile Responsiveness --- */
-    @media (max-width: 600px) {
-        .action-button-container {
-            bottom: 20px;
+        .prose p {
+            margin-bottom: 1.5em;
+            line-height: 1.85;
+            font-size: 1.25rem;
+            transition: opacity 0.5s ease; /* For Focus Mode */
         }
-        #message-button-container {
-            right: 20px;
-        }
-        .game-button {
-            padding: 12px 25px;
-            font-size: 16px;
-        }
-        #showMessageBtn {
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-        }
-        .modal-content {
-            padding: 25px;
-            width: 95%;
-        }
-        #game-question {
-            font-size: 18px;
-        }
-        #special-message {
-            font-size: 15px;
-            line-height: 1.7;
-        }
-    }
 
-  </style>
+        /* Artistic Elements */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Cinzel', serif;
+            font-size: 4.5rem;
+            line-height: 0.85;
+            padding-right: 1rem;
+            padding-top: 0.2rem;
+            color: var(--accent);
+        }
+
+        .poetic-line {
+            display: block;
+            margin-bottom: 0.75rem !important;
+            padding-left: 1.5rem;
+            border-left: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+        .poetic-line:hover {
+            border-left-color: var(--accent);
+        }
+
+        /* Cover Art (CSS Only) */
+        .abstract-blur {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 2s ease;
+        }
+        
+        /* Focus Mode Classes */
+        body.focus-mode .prose p {
+            opacity: 0.25; /* Dim everything by default */
+            filter: blur(0.5px);
+            transition: opacity 0.4s ease, filter 0.4s ease;
+        }
+        body.focus-mode .prose p.active-focus {
+            opacity: 1;
+            filter: blur(0);
+            transform: scale(1.01); /* Subtle pop */
+        }
+
+        /* Animations */
+        .fade-up {
+            animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--text-secondary); opacity: 0.2; border-radius: 2px; }
+
+        /* Selection Color */
+        ::selection {
+            background: var(--accent);
+            color: white;
+        }
+    </style>
 </head>
-<body>
+<body class="flex h-screen overflow-hidden">
 
-<audio id="bgMusic" loop playsinline>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_f0817cc1aa.mp3?filename=romantic-love-112195.mp3" type="audio/mp3">
-  Your browser does not support the audio element.
-</audio>
+    <!-- Paper Texture Overlay -->
+    <div class="texture-overlay"></div>
 
-<canvas id="main-canvas"></canvas>
-
-<div class="overlay">
-  <div class="center-message">Aku Cinta Kamu ❤️</div>
-</div>
-
-<div class="action-button-container" id="start-game-container">
-    <button id="startGameBtn" class="game-button">Click to Play</button>
-</div>
-<div class="action-button-container" id="message-button-container">
-    <button id="showMessageBtn" class="game-button">!</button>
-</div>
-
-<!-- Game Modal -->
-<div id="gameModal" class="modal">
-    <div class="modal-content">
-         <span class="modal-close" id="closeGameModal">&times;</span>
-         <h2 id="game-question">Do you love me more than I love you?</h2>
-         <div class="game-buttons">
-            <button id="yesBtn" class="game-button">Yes</button>
-            <button id="noBtn" class="game-button">No</button>
-         </div>
-    </div>
-</div>
-
-<!-- Win Modal -->
-<div id="winModal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close" id="closeWinModal">&times;</span>
-        <p id="win-message">Of course, I always win ✨👹<br>hehehe</p>
-    </div>
-</div>
-
-<!-- Special Message Modal -->
-<div id="specialMessageModal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close" id="closeSpecialMessageModal">&times;</span>
-        <p id="special-message">
-            Hey, Rawdah…
-            <br><br>
-            I just want you to be really clear about this.
-            I’m here for you no matter what happens... not to confuse you or pressure you, just to be here. &lt;3
-            <br><br>
-            I know this time feels hard and confusing, and it’s okay to protect your heart. I get that, and I respect it deeply. &lt;3
-            <br><br>
-            I don’t have all the answers yet, but I do care, I’m honest, and I truly want you to feel safe and at peace. You don’t have to rush anything, and you’re not alone. &lt;3
-            <br><br>
-            I’m right here with you… calmly and honestly. 🌠✨
-        </p>
-    </div>
-</div>
-
-<script>
-  // Canvas Setup
-  const mainCanvas = document.getElementById("main-canvas");
-  const ctx = mainCanvas.getContext("2d");
-  const bgMusic = document.getElementById("bgMusic");
-  let musicStarted = false;
-
-  let width = mainCanvas.width = window.innerWidth;
-  let height = mainCanvas.height = window.innerHeight;
-
-  // --- Matrix Rain background ---
-  const fontSize = 16;
-  let columns = Math.ceil(width / fontSize);
-  let drops = [];
-  for(let i = 0; i < columns; i++) {
-    drops[i] = 1;
-  }
-  
-  let time = 0;
-  const baseHue = 300; 
-  const hueRange = 30;
-  
-  const fireworks = [];
-
-  function createExplosion(x, y) {
-      const particleCount = 20;
-      const currentHue = baseHue + Math.sin(time) * hueRange; 
-      for (let i = 0; i < particleCount; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 4 + 1;
-          fireworks.push({
-              x, y,
-              dx: Math.cos(angle) * speed,
-              dy: Math.sin(angle) * speed,
-              text: "Raudah",
-              size: 12 + Math.random() * 8,
-              alpha: 1,
-              gravity: 0.08,
-              color: `hsl(${currentHue}, 100%, 75%)`
-          });
-      }
-  }
-
-  function drawFireworks() {
-      for (let i = fireworks.length - 1; i >= 0; i--) {
-          const p = fireworks[i];
-          ctx.globalAlpha = p.alpha;
-          ctx.fillStyle = p.color;
-          ctx.font = `${p.size}px monospace`;
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 10;
-          ctx.fillText(p.text, p.x, p.y);
-          p.x += p.dx;
-          p.y += p.dy;
-          p.dy += p.gravity;
-          p.alpha -= 0.02;
-          if (p.alpha <= 0) fireworks.splice(i, 1);
-      }
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
-  }
-  
-  // Main Animation Loop
-  function animate() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-    ctx.fillRect(0, 0, width, height);
-
-    time += 0.01;
-    const newHue = baseHue + Math.sin(time) * hueRange;
-    const newColor = `hsl(${newHue}, 100%, 70%)`;
-    
-    ctx.font = `${fontSize}px monospace`;
-    ctx.fillStyle = newColor;
-    ctx.shadowColor = newColor;
-    ctx.shadowBlur = 10;
-    
-    for (let i = 0; i < drops.length; i++) {
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
-        ctx.fillText("Raudah", x, y);
-
-        if (y > height && Math.random() > 0.975) {
-            drops[i] = 0;
-        }
-        drops[i]++;
-    }
-    
-    ctx.shadowBlur = 0;
-    
-    drawFireworks();
-
-    requestAnimationFrame(animate);
-  }
-
-  // --- General Setup & Event Listeners ---
-  function startMusic() {
-    if (!musicStarted) {
-      bgMusic.play().catch(e => console.error("Audio playback failed.", e));
-      musicStarted = true;
-    }
-  }
-  
-  function handleInteraction(e) {
-      if (!e.target.closest('.modal-content') && !e.target.classList.contains('game-button')) {
-        let x, y;
-        if(e.touches && e.touches.length > 0) {
-            x = e.touches[0].clientX;
-            y = e.touches[0].clientY;
-        } else {
-            x = e.clientX;
-            y = e.clientY;
-        }
-        createExplosion(x, y);
-    }
-    startMusic();
-  }
-
-  document.body.addEventListener("click", handleInteraction);
-  document.body.addEventListener("touchstart", handleInteraction);
-
-  
-  window.addEventListener('resize', () => {
-    width = mainCanvas.width = window.innerWidth;
-    height = mainCanvas.height = window.innerHeight;
-    columns = Math.ceil(width / fontSize);
-    drops = [];
-    for(let i = 0; i < columns; i++) {
-        drops[i] = 1;
-    }
-  });
-
-  // --- Game and Modals Logic ---
-  const startGameBtn = document.getElementById('startGameBtn');
-  const showMessageBtn = document.getElementById('showMessageBtn');
-  
-  const gameModal = document.getElementById('gameModal');
-  const winModal = document.getElementById('winModal');
-  const specialMessageModal = document.getElementById('specialMessageModal');
-  
-  const closeGameModalBtn = document.getElementById('closeGameModal');
-  const closeWinModalBtn = document.getElementById('closeWinModal');
-  const closeSpecialMessageModalBtn = document.getElementById('closeSpecialMessageModal');
-  
-  const yesBtn = document.getElementById('yesBtn');
-  const noBtn = document.getElementById('noBtn');
-  
-  let yesButtonEscapes = 0;
-  const maxEscapes = 5;
-  let isYesBtnOnLeft = true; 
-
-  startGameBtn.addEventListener('click', () => {
-      gameModal.classList.add('show');
-      yesButtonEscapes = 0;
-      yesBtn.style.display = 'inline-block';
-      yesBtn.style.position = 'relative';
-      yesBtn.style.top = 'auto';
-      yesBtn.style.left = 'auto';
-      isYesBtnOnLeft = true; 
-  });
-  
-  showMessageBtn.addEventListener('click', () => {
-    specialMessageModal.classList.add('show');
-  });
-  
-  noBtn.addEventListener('click', () => {
-    gameModal.classList.remove('show');
-    winModal.classList.add('show');
-  });
-
-  yesBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    yesButtonEscapes++;
-    if (yesButtonEscapes >= maxEscapes) {
-        yesBtn.style.display = 'none';
-        return;
-    }
-    yesBtn.style.position = 'absolute';
-    const container = yesBtn.parentElement;
-    const noBtnEl = document.getElementById('noBtn');
-
-    let newLeft, newTop;
-    let attempts = 0;
-
-    do {
-        const containerWidth = container.offsetWidth;
-        const buttonWidth = yesBtn.offsetWidth;
-        const buttonHeight = yesBtn.offsetHeight;
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-[var(--bg-base)] border-r border-[var(--line-color)] transform -translate-x-full md:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col shadow-2xl md:shadow-none">
+        <div class="p-8 border-b border-[var(--line-color)]">
+            <h1 class="font-cinzel font-bold text-xl tracking-wider text-[var(--accent)]">The Reflection</h1>
+            <p class="font-ui text-[10px] uppercase tracking-[0.2em] mt-2 text-[var(--text-secondary)]">Interactive eBook</p>
+        </div>
         
-        const noBtnOffsetLeft = noBtnEl.offsetLeft;
-        const noBtnOffsetWidth = noBtnEl.offsetWidth;
+        <nav id="toc" class="flex-1 overflow-y-auto p-6 space-y-4 opacity-0 animate-[fadeIn_0.5s_0.3s_forwards]">
+            <!-- Generated via JS -->
+        </nav>
 
-        if (isYesBtnOnLeft) {
-            newLeft = (noBtnOffsetLeft + noBtnOffsetWidth) + Math.random() * (containerWidth - (noBtnOffsetLeft + noBtnOffsetWidth) - buttonWidth);
-        } else {
-            newLeft = Math.random() * (noBtnOffsetLeft - buttonWidth);
+        <div class="p-6 border-t border-[var(--line-color)] bg-[var(--bg-base)]">
+            <div class="flex items-center justify-between mb-4">
+                <span class="font-ui text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">Experience</span>
+            </div>
+            <div class="flex gap-4 items-center justify-between">
+                <button onclick="toggleTheme()" class="text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors" title="Dark Mode">
+                    <i data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+                
+                <div class="h-4 w-[1px] bg-[var(--line-color)]"></div>
+
+                <button onclick="toggleFocusMode()" id="focusBtn" class="text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors flex items-center gap-2 group" title="Focus Mode">
+                    <i data-lucide="eye" class="w-5 h-5 group-[.active]:text-[var(--accent)]"></i>
+                </button>
+
+                <div class="h-4 w-[1px] bg-[var(--line-color)]"></div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="adjustSize(-1)" class="text-[var(--text-secondary)] hover:text-[var(--accent)] text-xs">A-</button>
+                    <button onclick="adjustSize(1)" class="text-[var(--text-secondary)] hover:text-[var(--accent)] text-sm font-bold">A+</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay Mobile -->
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden md:hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 md:ml-80 h-full flex flex-col relative bg-[var(--bg-base)] transition-colors duration-700">
+        
+        <!-- Mobile Header -->
+        <header class="md:hidden flex justify-between items-center p-5 border-b border-[var(--line-color)] z-30 bg-[var(--bg-base)]/90 backdrop-blur">
+            <button onclick="toggleSidebar()"><i data-lucide="menu" class="text-[var(--text-primary)]"></i></button>
+            <span class="font-cinzel text-sm font-bold text-[var(--accent)]">The Reflection</span>
+            <div class="w-6"></div>
+        </header>
+
+        <!-- Reading Canvas -->
+        <div id="readingCanvas" class="flex-1 overflow-y-auto relative scroll-smooth">
+            
+            <div class="max-w-3xl mx-auto px-6 py-16 md:py-24 min-h-screen flex flex-col relative z-10">
+                <div id="content" class="fade-up">
+                    <!-- Content goes here -->
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="max-w-3xl mx-auto px-6 pb-12 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity">
+                <button onclick="nav(-1)" id="prevBtn" class="font-ui text-xs uppercase tracking-widest flex items-center gap-2 hover:text-[var(--accent)] disabled:opacity-0 transition-all">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Prev
+                </button>
+                <div class="h-[1px] flex-1 bg-[var(--line-color)] mx-8"></div>
+                <button onclick="nav(1)" id="nextBtn" class="font-ui text-xs uppercase tracking-widest flex items-center gap-2 hover:text-[var(--accent)] disabled:opacity-0 transition-all">
+                    Next <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- Data ---
+        const bookData = [
+            {
+                type: 'cover',
+                title: "Chasing Images",
+                subtitle: "That Aren’t Ours",
+                meta: "A meditation on beauty, identity, and the quiet loss of meaning.",
+                content: ""
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Preface",
+                title: "Before You Begin",
+                content: `
+                    <p class="drop-cap">This is not a book about beauty.</p>
+                    <p class="poetic-line">Not really.</p>
+                    <p>It is a book about how beauty quietly replaced something else. How the body became a currency. How appearance became a language of worth. And how, without noticing, we started measuring ourselves against images that were never meant to be human.</p>
+                    <div class="my-8 pl-4 border-l-2 border-[var(--accent)]">
+                        <p class="italic text-lg">This book doesn’t ask you to reject beauty.<br>It asks you to remember where it belongs.</p>
+                    </div>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter I",
+                title: "The Day Priorities Collapsed",
+                content: `
+                    <p class="drop-cap">In 2003, in Manhattan, an American journalist named Alex Kuczynski woke up to one of the worst pieces of news a person can receive.</p>
+                    <p>Her closest friend, Jerry Ninkman, had passed away.</p>
+                    <p>For a moment, Alex froze. Grief is strange like that. It doesn’t always arrive as tears. Sometimes it arrives as silence. As a heavy pause where the world stops moving, even though everything around you keeps going.</p>
+                    <p>But even while she was drowning in that grief, another thought surfaced.</p>
+                    <p>That same day, Alex had an appointment she had been waiting weeks for.</p>
+                    <p class="font-cinzel text-xl text-[var(--accent)] text-center my-12 tracking-wide">A facial peel.</p>
+                    <p>She stood there, looking at her calendar. Then at the clothes prepared for the funeral. And she asked herself a question that would later change her life:</p>
+                    <p class="italic">Should I go to the funeral… or make it to my beauty appointment?</p>
+                    <p>The decision she made was shocking even to herself. She went to the clinic. She rushed in, tried to touch up her appearance, and even asked for a quick lip injection. She felt her lips looked a little dull.</p>
+                    <p>When the appointment ended, she looked in the mirror and froze again. This time, for a different reason.</p>
+                    <p>Her lips were swelling.</p>
+                    <p class="poetic-line text-[var(--accent)]">Bigger.</p>
+                    <p class="poetic-line text-[var(--accent)]">Bigger.</p>
+                    <p class="poetic-line text-[var(--accent)]">Bigger.</p>
+                    <p>She realized she couldn’t attend the funeral like this. So she didn’t go.</p>
+                    <p>That moment forced her to ask a question far more painful than grief itself: Had her priorities become distorted?</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter II",
+                title: "Social Currency",
+                content: `
+                    <p>The obsession with cosmetic procedures did not grow because people suddenly fell in love with beauty. It grew because the body became a tool for social evaluation.</p>
+                    <p class="font-bold tracking-widest uppercase text-xs text-center my-6 text-[var(--text-secondary)]">Success &bull; Acceptance &bull; Status</p>
+                    <p>These are not shallow desires. They are human ones. And when people discovered that cosmetic procedures could open doors to these things, hesitation disappeared.</p>
+                    <p>This becomes clear in extreme cases. Like that of a Chinese woman who underwent more than 100 cosmetic procedures, spending over half a million dollars.</p>
+                    <p>When researchers looked deeper, one phrase kept appearing again and again:</p>
+                    <blockquote class="text-2xl font-cinzel text-center my-10 text-[var(--text-primary)]">“There’s always something better.”</blockquote>
+                    <p>This sentence sits at the core of the problem. No matter what you change, no matter how much you improve, there is always another upgrade waiting.</p>
+                    <p>This is why cosmetic procedures rarely stop at one. The second leads to the third. The third to the fourth. And suddenly, “improvement” has no finish line.</p>
+                `
+            },
+             {
+                type: 'chapter',
+                chapterLabel: "Chapter III",
+                title: "Normalization",
+                content: `
+                    <p>As demand exploded, illegal clinics followed. Tens of thousands of unlicensed centers. Hundreds of thousands of unqualified practitioners.</p>
+                    <p>The result is not beauty. It is damage. Swollen faces. Burned skin. Daily medical errors.</p>
+                    <p>The most dangerous part is not the number of procedures. It is how normal they’ve become.</p>
+                    <p>Twenty years ago, cosmetic surgery was a major decision. Today, it’s treated like a routine appointment.</p>
+                    <p class="poetic-line">Book it.</p>
+                    <p class="poetic-line">Do it.</p>
+                    <p class="poetic-line">Go home.</p>
+                    <p>No fear. No hesitation. No question asking: <span class="italic">Do I really need this?</span></p>
+                    <p>Normalization doesn’t happen by accident. It happens because the market requires it.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter IV",
+                title: "When Health Lost Meaning",
+                content: `
+                    <p>As this obsession spread, it reached spaces once meant to protect health. Gyms.</p>
+                    <p>The gym was supposed to be a place of strength and well-being. For many, it became a place of comparison and quiet suffering. People compare themselves to images that don’t exist.</p>
+                    <p>A study in Norway involving over 300 fitness trainers—trainers, not trainees—revealed something disturbing. Many practiced self-induced vomiting to control their weight.</p>
+                    <p>If even experts collapse under this pressure, what about everyone else?</p>
+                    <p class="text-center italic my-8 text-[var(--accent)]">Perfect bodies on the outside. Internal damage on the inside.</p>
+                    <p>The body becomes a façade.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter V",
+                title: "Children in the Mirror",
+                content: `
+                    <p>This obsession did not stop with adults. Children entered the mirror.</p>
+                    <p>Online, a trend emerged known as “Sephora Kids.” Children—some as young as eight—filming skincare routines. Using face masks. Anti-aging products.</p>
+                    <p class="font-bold">Anti-aging. At eight years old.</p>
+                    <p>Research from 2024 shows that 71% of girls aged 7–17 are interested in beauty products. 69% developed this interest before the age of ten.</p>
+                    <p>Beauty companies noticed. A celebrity-backed brand launched products designed specifically for children. Playful packaging. Animal illustrations.</p>
+                    <p>Doctors warned: These products might be safe for skin. But no one can guarantee they’re safe for minds.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter VI",
+                title: "Perception vs Reality",
+                content: `
+                    <p>Constant dissatisfaction can become something darker. Body Dysmorphic Disorder.</p>
+                    <p>People who suffer from it do not see themselves as they are. They see flaws no one else notices. A strange nose. A large cheek. Dull skin.</p>
+                    <p>Even when these flaws don’t exist, they feel real.</p>
+                    <p>This is why cosmetic procedures often make things worse. Because the problem is not the body. It is perception.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter VII",
+                title: "The Void",
+                content: `
+                    <p>Modern society suffers from a quiet loss of meaning. For many, there is no spiritual anchor. No shared purpose.</p>
+                    <p>When meaning fades, the visible becomes everything. Material things gain power. The body becomes identity.</p>
+                    <p class="poetic-line">A tool for acceptance.</p>
+                    <p class="poetic-line">A shield against time.</p>
+                    <p>This fuels aging anxiety—the fear of growing older. Wrinkles become threats. Aging feels like failure.</p>
+                    <p>Beauty companies know this fear well. They sell youth. And comparison never sleeps.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter VIII",
+                title: "Shifting Standards",
+                content: `
+                    <p>Beauty standards do not stand still. They shift. They flip. They contradict themselves.</p>
+                    <p>With enough exposure to edited images, the brain adapts. This is called <span class="font-bold text-[var(--accent)]">perceptual adaptation</span>.</p>
+                    <p>Reality starts to feel wrong. And no matter how much effort someone makes, it never feels enough. Because the target keeps moving.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Chapter IX",
+                title: "What We Forgot",
+                content: `
+                    <p>Once, people were measured by what they did. By character. By contribution. The body mattered—but it wasn’t the whole identity.</p>
+                    <p>Studies show that those who build identity on internal values live with less anxiety and depression. Those who build it on image suffer more.</p>
+                    <p>Another study found that people who view aging positively live 7.5 years longer on average. The irony is cruel: The attempt to escape aging accelerates it.</p>
+                `
+            },
+            {
+                type: 'chapter',
+                chapterLabel: "Conclusion",
+                title: "The Return",
+                content: `
+                    <p>The beauty industry thrives on a simple equation: <span class="font-cinzel font-bold">Marketing + Fear + Lack of Awareness</span>.</p>
+                    <p>This does not mean beauty is evil. Beauty is a gift. But when beauty becomes the ultimate goal, it turns into something we worship.</p>
+                    <p>A well-known narration describes a person overlooked by society—disheveled hair, dusty clothes, no status. Yet if that person were to swear an oath before God, it would be answered.</p>
+                    <p>Human value does not sit in front of a camera.</p>
+                    <p>Perhaps it is time to return the body to where it belongs.</p>
+                    <p class="poetic-line">Not as an idol.</p>
+                    <p class="poetic-line">But as a vessel.</p>
+                    <div class="mt-20 flex flex-col items-center justify-center opacity-80">
+                        <i data-lucide="feather" class="w-8 h-8 text-[var(--accent)] mb-4"></i>
+                        <p class="italic text-center font-cinzel">Because the more we chase images that aren’t ours,<br>the further we drift from ourselves.</p>
+                    </div>
+                `
+            }
+        ];
+
+        // --- Logic ---
+        let currentIndex = 0;
+        let fontSize = 1.25;
+        let isFocusMode = false;
+
+        function init() {
+            lucide.createIcons();
+            renderTOC();
+            loadContent(0);
+            
+            // Focus Mode Scroll Listener
+            document.getElementById('readingCanvas').addEventListener('scroll', handleScrollFocus);
         }
 
-        newTop = Math.random() * (container.offsetHeight - buttonHeight);
-        
-        attempts++;
-    } while (attempts < 50); 
+        function renderTOC() {
+            const nav = document.getElementById('toc');
+            nav.innerHTML = bookData.map((item, i) => `
+                <button onclick="loadContent(${i})" class="group w-full text-left flex flex-col items-start pl-4 border-l-2 transition-all duration-300 ${currentIndex === i ? 'border-[var(--accent)]' : 'border-transparent hover:border-[var(--line-color)]'}">
+                    <span class="font-cinzel text-xs text-[var(--text-secondary)] mb-1 uppercase tracking-widest group-hover:text-[var(--text-primary)] transition-colors">${item.chapterLabel || 'Intro'}</span>
+                    <span class="font-display text-lg leading-tight text-[var(--text-primary)] group-hover:translate-x-1 transition-transform">${item.title}</span>
+                </button>
+            `).join('');
+        }
 
-    isYesBtnOnLeft = !isYesBtnOnLeft; 
+        function loadContent(idx) {
+            currentIndex = idx;
+            const container = document.getElementById('content');
+            const data = bookData[idx];
 
-    yesBtn.style.top = `${newTop}px`;
-    yesBtn.style.left = `${newLeft}px`;
-  });
+            // Animation out
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
 
-  function closeModal(modal) { modal.classList.remove('show'); }
-  closeGameModalBtn.addEventListener('click', () => closeModal(gameModal));
-  closeWinModalBtn.addEventListener('click', () => closeModal(winModal));
-  closeSpecialMessageModalBtn.addEventListener('click', () => closeModal(specialMessageModal));
-  
-  gameModal.addEventListener('click', (e) => { if (e.target === gameModal) closeModal(gameModal); });
-  winModal.addEventListener('click', (e) => { if (e.target === winModal) closeModal(winModal); });
-  specialMessageModal.addEventListener('click', (e) => { if (e.target === specialMessageModal) closeModal(specialMessageModal); });
+            setTimeout(() => {
+                // Scroll top
+                document.getElementById('readingCanvas').scrollTop = 0;
 
-  // Start the smooth animation loop
-  animate();
+                if (data.type === 'cover') {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center min-h-[60vh] text-center relative">
+                            <div class="abstract-blur"></div>
+                            <div class="relative z-10">
+                                <h2 class="font-cinzel font-bold text-sm tracking-[0.3em] text-[var(--accent)] mb-6 uppercase">A Short Book</h2>
+                                <h1 class="font-display text-6xl md:text-8xl font-medium leading-[0.9] mb-8 text-[var(--text-primary)]">Chasing<br><span class="italic font-light">Images</span></h1>
+                                <p class="font-ui text-sm uppercase tracking-widest max-w-sm mx-auto text-[var(--text-secondary)] leading-relaxed">${data.subtitle}</p>
+                                <div class="w-[1px] h-24 bg-[var(--text-secondary)] mx-auto mt-12 opacity-30"></div>
+                                <button onclick="nav(1)" class="mt-8 px-8 py-3 border border-[var(--text-primary)] text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-base)] transition-all font-ui text-xs uppercase tracking-widest">Begin Reading</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="chapter-header mb-16 text-center">
+                            <span class="font-cinzel text-xs text-[var(--accent)] tracking-[0.2em] uppercase block mb-4">${data.chapterLabel}</span>
+                            <h2 class="font-display text-5xl md:text-6xl text-[var(--text-primary)] mb-6">${data.title}</h2>
+                            <div class="w-12 h-[2px] bg-[var(--accent)] mx-auto opacity-60"></div>
+                        </div>
+                        <div class="prose max-w-none text-[var(--text-primary)]" style="font-size: ${fontSize}rem">
+                            ${data.content}
+                        </div>
+                    `;
+                }
 
-</script>
+                // Animation in
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+                
+                renderTOC();
+                updateNavButtons();
+                
+                // Re-init icons for new content
+                lucide.createIcons();
+                
+                // Reset focus mode if active
+                if(isFocusMode) handleScrollFocus();
 
+                // Close sidebar on mobile
+                if (window.innerWidth < 768) closeSidebar();
+
+            }, 300);
+        }
+
+        function nav(dir) {
+            const next = currentIndex + dir;
+            if (next >= 0 && next < bookData.length) loadContent(next);
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === bookData.length - 1;
+        }
+
+        // --- Sidebar & Mobile ---
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('overlay');
+            if (sb.classList.contains('-translate-x-full')) {
+                sb.classList.remove('-translate-x-full');
+                ov.classList.remove('hidden');
+                setTimeout(() => ov.classList.remove('opacity-0'), 10);
+            } else {
+                closeSidebar();
+            }
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            const ov = document.getElementById('overlay');
+            ov.classList.add('opacity-0');
+            setTimeout(() => ov.classList.add('hidden'), 300);
+        }
+
+        // --- Settings ---
+        function toggleTheme() {
+            const body = document.body;
+            body.setAttribute('data-theme', body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        }
+
+        function adjustSize(dir) {
+            if (dir === 1 && fontSize < 1.8) fontSize += 0.1;
+            if (dir === -1 && fontSize > 1) fontSize -= 0.1;
+            loadContent(currentIndex); // Reload to apply size cleanly
+        }
+
+        // --- Focus Mode Logic ---
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            document.body.classList.toggle('focus-mode');
+            const btn = document.getElementById('focusBtn');
+            
+            if (isFocusMode) {
+                btn.querySelector('i').classList.add('text-[var(--accent)]');
+                handleScrollFocus(); // Initial trigger
+            } else {
+                btn.querySelector('i').classList.remove('text-[var(--accent)]');
+            }
+        }
+
+        function handleScrollFocus() {
+            if (!isFocusMode) return;
+            
+            const paragraphs = document.querySelectorAll('.prose p');
+            const triggerPoint = window.innerHeight / 2; // Center of screen
+
+            paragraphs.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                // If the paragraph center is near the screen center
+                const pCenter = rect.top + (rect.height / 2);
+                
+                if (pCenter > triggerPoint - 150 && pCenter < triggerPoint + 150) {
+                    p.classList.add('active-focus');
+                } else {
+                    p.classList.remove('active-focus');
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
+
